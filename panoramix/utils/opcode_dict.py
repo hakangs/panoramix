@@ -74,6 +74,8 @@ opcode_dict = {
     0x46: "chainid",
     0x47: "selfbalance",
     0x48: "basefee",
+    0x49: "blobhash",  # EIP-4844 (Cancún)
+    0x4A: "blobbasefee",  # EIP-7516 (Cancún)
     #
     # Stack, Memory, Storage and Flow Operations
     #
@@ -89,6 +91,9 @@ opcode_dict = {
     0x59: "msize",
     0x5A: "gas",
     0x5B: "jumpdest",
+    0x5C: "tload",  # EIP-1153 (Cancún) - Transient Storage
+    0x5D: "tstore",  # EIP-1153 (Cancún) - Transient Storage
+    0x5E: "mcopy",  # EIP-5656 (Cancún) - Memory Copy
     #
     # Push Operations
     #
@@ -230,6 +235,8 @@ stack_diffs = {
     "address": 1,
     "selfbalance": 1,
     "basefee": 1,
+    "blobhash": 0,  # EIP-4844: takes 1 arg (index), returns 1 value (hash)
+    "blobbasefee": 1,  # EIP-7516: takes 0 args, returns 1 value
     "chainid": 1,
     "call": -6,
     "callcode": -6,
@@ -267,8 +274,12 @@ stack_diffs = {
     "sha3": -1,
     "pop": -1,
     "push_XX": 1,
+    "push0": 1,  # EIP-3855 (Shanghai): pushes 0 to stack
     "sstore": -2,
     "sload": 0,
+    "tload": 0,  # EIP-1153: takes 1 arg (key), returns 1 value
+    "tstore": -2,  # EIP-1153: takes 2 args (key, value), returns 0
+    "mcopy": -3,  # EIP-5656: takes 3 args (dest, src, length), returns 0
     "return": -2,
     "revert": -2,
     "assert_fail": 0,

@@ -4,6 +4,7 @@ import lzma
 import os
 import sys
 import time
+import pickle
 from pathlib import Path
 from zipfile import ZipFile
 from typing import Optional
@@ -44,22 +45,26 @@ logger = logging.getLogger(__name__)
 
 
 def abi_path():
-    return cache_dir() / "abi_db.shelve"
+    return cache_dir() / "abi_db.pkl"
 
 
 def check_supplements():
-    if not dbm.whichdb(str(abi_path())):
+    if not abi_path().exists():
         compressed_supplements = Path(__file__).parent.parent / "data" / "abi_dump.xz"
         logger.info("Loading %s into %s...", compressed_supplements, abi_path())
-        with lzma.open(compressed_supplements) as inf, shelve.open(
-            str(abi_path())
-        ) as out:
+        # Use pickle instead of shelve/dbm to avoid DBM compatibility issues on macOS
+        abi_dict = {}
+        with lzma.open(compressed_supplements) as inf:
             for line in inf:
                 line = json.loads(line)
                 selector, abi = line["selector"], line["abi"]
-                out[selector] = abi
+                abi_dict[selector] = abi
+        
+        # Write the dictionary to a pickle file
+        with open(str(abi_path()), 'wb') as f:
+            pickle.dump(abi_dict, f, protocol=pickle.HIGHEST_PROTOCOL)
 
-        assert dbm.whichdb(str(abi_path()))
+        assert abi_path().exists()
 
         logger.info("%s is ready.", abi_path())
 
@@ -72,5 +77,7 @@ def fetch_sig(hash) -> Optional[dict]:
         hash = int(hash, 16)
     hash = "{:#010x}".format(hash)
 
-    with shelve.open(str(abi_path())) as s:
-        return s.get(hash)
+    # Load from pickle file instead of shelve
+    with open(str(abi_path()), 'rb') as f:
+        abi_dict = pickle.load(f)
+        return abi_dict.get(hash)

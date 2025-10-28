@@ -45,6 +45,18 @@ Windows is not supported currently.
 
 ## Changelog
 
+### 0.7.0 (Upcoming)
+
+ * Added support for Shanghai (EIP-3855) and Cancún (EIP-1153, EIP-4844, EIP-5656, EIP-7516) opcodes:
+   - PUSH0 (0x5f) - EIP-3855: More efficient zero value pushing
+   - TLOAD (0x5c) / TSTORE (0x5d) - EIP-1153: Transient storage operations
+   - MCOPY (0x5e) - EIP-5656: Efficient memory copying
+   - BLOBHASH (0x49) - EIP-4844: Access to blob versioned hashes
+   - BLOBBASEFEE (0x4a) - EIP-7516: Returns current blob base fee
+ * Improved handling of Solidity via-IR compilation artifacts
+ * Enhanced robustness for complex dispatch/fallback patterns
+ * Added comprehensive test suite for new opcodes
+
 ### 0.5.0
 
  * Added support for the BASEFEE opcode.

@@ -590,6 +590,10 @@ class VM(EasyCopy):
 
         elif op[:4] == "push":
             stack.append(param)
+        
+        elif op == "push0":
+            # EIP-3855 (Shanghai): PUSH0 - pushes 0 to the stack
+            stack.append(0)
 
         elif op == "pop":
             stack.pop()
@@ -739,6 +743,17 @@ class VM(EasyCopy):
             val = stack.pop()
             trace(("store", 256, 0, sloc, val))
 
+        elif op == "tload":
+            # EIP-1153 (Cancún): TLOAD - Load from transient storage
+            tsloc = stack.pop()
+            stack.append(("tstorage", 256, 0, tsloc))
+
+        elif op == "tstore":
+            # EIP-1153 (Cancún): TSTORE - Store to transient storage
+            tsloc = stack.pop()
+            val = stack.pop()
+            trace(("tstore", 256, 0, tsloc, val))
+
         elif op == "mload":
             memloc = stack.pop()
 
@@ -769,6 +784,17 @@ class VM(EasyCopy):
                     val,
                 )
             )
+
+        elif op == "mcopy":
+            # EIP-5656 (Cancún): MCOPY - Efficient memory copying
+            dest = stack.pop()
+            src = stack.pop()
+            length = stack.pop()
+
+            if length != 0:
+                # Copy memory from src to dest
+                src_data = ("mem", ("range", src, length))
+                trace(("setmem", ("range", dest, length), src_data))
 
         elif op == "extcodecopy":
             addr = stack.pop()
@@ -986,8 +1012,19 @@ class VM(EasyCopy):
             "calldatasize",
             "returndatasize",
             "basefee",
+            "blobbasefee",  # EIP-7516 (Cancún)
         ]:
             stack.append(op)
+
+        elif op == "blobhash":
+            # EIP-4844 (Cancún): BLOBHASH - Returns versioned hash of blob
+            index = stack.pop()
+            stack.append(
+                (
+                    "blobhash",
+                    index,
+                )
+            )
 
         else:
             # TODO: Maybe raise an error directly?
